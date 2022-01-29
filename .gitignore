@@ -1,0 +1,9 @@
+# Coverlet test coverage results.
+TestResults/
+
+### VSCodium / Visual Studio.
+.vscode/
+
+### dotnet binary outputs.
+obj/
+bin/
