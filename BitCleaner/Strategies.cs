@@ -26,7 +26,7 @@ namespace BitCleaner
 
         public FileIoFacade FileIoFacade { get; private set; }
 
-        public Dictionary<K, List<string>> Scan()
+        public virtual Dictionary<K, List<string>> Scan()
         {
             var enumerationOptions = new EnumerationOptions();
             enumerationOptions.RecurseSubdirectories = true;
@@ -48,7 +48,7 @@ namespace BitCleaner
             return sourceFiles;
         }
 
-        public IEnumerable<string> Filter(IEnumerable<string> paths)
+        public virtual IEnumerable<string> Filter(IEnumerable<string> paths)
         {
             return GroupPaths(paths).SelectMany(group => group.Value);
         }
@@ -119,7 +119,7 @@ namespace BitCleaner
 
     public class StrategyFactory
     {
-        public ScanStrategy<string> Create(CommonStrategy strategy, Options options, FileIoFacade fileIoFacade)
+        public virtual ScanStrategy<string> Create(CommonStrategy strategy, Options options, FileIoFacade fileIoFacade)
         {
             switch (strategy)
 			{
