@@ -75,6 +75,41 @@ namespace BitCleaner.Tests
         }
 
         [Fact]
+        public void Filter_Empty()
+        {
+            fileDigest = new FileDigest(new Options(), fileIoFacadeMock.Object, HashAlgorithmName.SHA1);
+            var result = fileDigest.Filter(new List<string>());
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void Filter_KeepsDupes()
+        {   
+            fileIoFacadeMock.Setup(f => f.Digest(It.Is<string>(s => s.Contains("/a")), It.IsAny<HashAlgorithmName>()))
+                .Returns("a-digest");
+            fileIoFacadeMock.Setup(f => f.Digest(It.Is<string>(s => s.Contains("/b")), It.IsAny<HashAlgorithmName>()))
+                .Returns((string p, HashAlgorithmName _) => p + "_digest");
+            
+            fileDigest = new FileDigest(new Options(), fileIoFacadeMock.Object, HashAlgorithmName.SHA1);
+
+            var result = fileDigest.Filter(new string[]
+            {
+                "source/a.mp3",
+                "source/b.mp3",
+                "source/sub/a.mp3",
+                "source/sub/b.mp3"
+            });
+
+            Assert.Equal(new List<string>()
+                {
+                    "source/a.mp3",
+                    "source/sub/a.mp3"
+                },
+                result
+            );
+        }
+
+        [Fact]
         public void Scan_GroupedByDigest_AllOptions()
         {
             var options = new Options()
@@ -280,6 +315,57 @@ namespace BitCleaner.Tests
                     "target/sub/b.mp3"
                     }),
                 "b.mp3 does not contain expected paths");
+        }
+
+        [Fact]
+        public void Filter_Empty()
+        {
+            var result = fileName.Filter(new List<string>());
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void Filter_KeepsDupes()
+        {   
+            var result = fileName.Filter(new string[]
+            {
+                "source/a.mp3",
+                "source/b.mp3",
+                "source/sub/a.mp3",
+                "source/sub/b_copy.mp3"
+            });
+
+            Assert.Equal(new List<string>()
+                {
+                    "source/a.mp3",
+                    "source/sub/a.mp3"
+                },
+                result
+            );
+        }
+    }
+
+    /// <summary>Unit tests for <c cref="StrategyFactory">StrategyFactory</c>.</summary>
+    public class StrategyFactoryTest
+    {
+        Mock<FileIoFacade> fileIoFacadeMock = new Mock<FileIoFacade>();
+        StrategyFactory strategyFactory = new StrategyFactory();
+
+        [Theory]
+        [InlineData(CommonStrategy.FileDigest)]
+        [InlineData(CommonStrategy.FileName)]
+        public void Create(CommonStrategy strategy)
+        {
+            var result = strategyFactory.Create(strategy, new Options(), fileIoFacadeMock.Object);
+            Assert.Equal(strategy.ToString(), result.GetType().Name);
+        }
+
+        [Fact]
+        public void Create_StrategyNotRegistered()
+        {
+            Assert.Throws<ArgumentException>(
+                () => strategyFactory.Create((CommonStrategy) (-1), new Options(), fileIoFacadeMock.Object)
+            );
         }
     }
 }
