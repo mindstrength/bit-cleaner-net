@@ -28,12 +28,10 @@ namespace BitCleaner
 
         public virtual string Digest(string path, HashAlgorithmName digestAlgorithm)
         {
-            var algo = HashAlgorithm.Create(digestAlgorithm.Name ?? "SHA1");
-            using (var stream = new FileInfo(path).OpenRead())
-            {
-                var bytes = algo!.ComputeHash(stream);
-                return Convert.ToHexString(bytes);
-            }
+            var algo = (HashAlgorithm) CryptoConfig.CreateFromName(digestAlgorithm.Name ?? "SHA1")!;
+            using var stream = new FileInfo(path).OpenRead();
+            var bytes = algo.ComputeHash(stream);
+            return Convert.ToHexString(bytes);
         }
     }
 }
